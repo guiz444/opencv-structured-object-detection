@@ -1,142 +1,306 @@
-#  Black Shape 3D Pose Detection System
 
-## 本项目基于 **OpenCV + Python**，实现了从视频或摄像头画面中检测黄色背景上的黑色方块，并通过 `solvePnP` 计算物体的三维位姿，在画面中实时绘制 3D 坐标轴。
+Here is the updated English version of your documentation. I have synchronized the structure, added the missing sections (Parameter Adjustment Guide, additional image/GIF placeholders), and aligned the technical descriptions with the Chinese version.
 
-## 目标
-![金矿石](2d.png)
+---
+
+# 4_pose_estimation_pnp
+
+## 🔹 Project Overview
+
+This module implements a **structured object detection and 3D pose estimation pipeline** based on traditional computer vision. It supports multiple detection strategies and temporal smoothing for consecutive frames. The module is primarily applied to detecting marked ores, squares, or polygon targets and computing their 3D poses.
+
+**Key features:**
+
+* **Multi-strategy target detection:** Minimum bounding rectangle + area filtering, polygon combination recognition, and real-time ore detection.
+* **Pose estimation:** Uses OpenCV `solvePnP` for 3D pose calculation, featuring temporal smoothing and outlier rejection (jitter filtering).
+* **Visualization:** Supports 2D marking, 3D coordinate axis drawing, and reprojection point display.
+* **Flexibility:** Adaptable to video or camera input, with support for result saving and frame capture.
+
+---
+
+## 📁 Directory Structure
+
+```
+4_pose_estimation_pnp/
+├── detect_squares_area_filter/          
+│   ├── imagepoints.py        # Helper functions: image corner extraction
+│   ├── pnp.py                # Core pose estimation pipeline (solvePnP)
+│   ├── pnp_math.py           # Mathematical utilities: reprojection, rotation matrix, smoothing
+│   └── pnp_Matplotlib3D.py   # Camera trajectory visualization (Matplotlib)
+└── other_vision/
+    ├── detect_quad_from_hex_combo/      
+    │   ├── test.py            # Polygon combination detection (1 square + 3 hex), with pose estimation
+    │   └── test0.py           # Main demo: video processing + pose visualization
+    └── gold_silver_detector.py # Real-time ore detection (detection only, no solvePnP)
+assets/                          # Sample videos/images/resources
+README.md
+stone.mp4                        # Test video
+
+```
+
+![金矿石](assets/2d.png) 
+> Note: The HSV segmentation range in this file is extracted via the `exact tool` function from 1.
+![分割结果](assets/HSV.png)
+
+
+---
+
+## ⚙️ Function Overview
+
+### 1️⃣ `detect_squares_area_filter/`
+
+* Detect black square targets using minimum bounding rectangle + area similarity filtering.
+* Used to verify if corner points can be accurately output.
+* ![框选效果](assets/yellow_squares_20251015_193540.png)
+* Extract corner points for 3D pose estimation.
+* Supports temporal smoothing to suppress jitter and abnormal jumps across consecutive frames.
+* **GIF Demonstration:**
+* 坐标绘制效果 ![坐标绘制效果](assets/output_result_20251016_130043.gif)
+
+* ## ⚖️ Parameter Adjustment Guide
+
+| Parameter | Meaning | Recommended Value | Notes |
+| --- | --- | --- | --- |
+| `jump_threshold` | Single-frame jump distance threshold | 40~60 | Unit: pixels; smaller values → stricter suppression |
+| `area_diff_ratio` | Area difference ratio threshold | 0.3 | Discard squares if area fluctuation exceeds this ratio |
+| `axis_length` | 3D axis length | 50 | Controls the length of the rendered 3D axes |
+
+### 2️⃣ `other_vision/detect_quad_from_hex_combo/`
+
+* Detect a combination of **1 square + 3 hexagons** on a yellow background and calculate the four-point rectangle.
+* Select the best combination based on geometric scoring (rectangle approximation).
+* Visualize centroids, corner numbering, and connecting lines.
+* Supports `solvePnP` pose estimation and reprojection error handling.
+* ![框选效果](assets/img.png)
+
+
+### 3️⃣ `other_vision/gold_silver_detector.py`
+
+* Real-time detection of gold/silver ore markers (arrows + squares).
+* Uses color segmentation, contour extraction, and shape recognition for marker identification.
+* Highlights ROI for arrow and square markers.
+* **Does not** include pose estimation; suitable for real-time monitoring or fast recognition.
+
+---
+
+## 📌 Technical Highlights
+
+* **Multi-strategy Geometric Detection:** Combines minimum rectangle, area filtering, and polygon scoring for robust detection.
+* **3D Pose Estimation:** Estimates 6DOF pose using OpenCV `solvePnP` (IPPE + ITERATIVE methods).
+* **Temporal Smoothing:** Smooths rotation and translation vectors to reduce jitter.
+* **Reprojection Validation:** Filters outliers based on reprojection error to ensure pose reliability.
+* **Modular Design:** Different strategies can be invoked independently, facilitating rapid experimentation and iteration.
+
+---
+
+## 💻 Dependencies
+
+* Python ≥ 3.6
+* OpenCV (`cv2`)
+* NumPy (`np`)
+* Matplotlib (strictly for 3D visualization in `pnp_Matplotlib3D.py`)
+
+Install dependencies:
+
+```bash
+pip install opencv-python numpy matplotlib
+
+```
+
+---
+
+## 🚀 Usage Examples
+
+### 1. Polygon combination pose detection (video)
+
+```bash
+cd other_vision/detect_quad_from_hex_combo/
+python test0.py
+
+```
+
+* **Spacebar:** Pause/Resume playback
+* **S:** Save current frame
+* **ESC:** Exit
+
+### 2. Real-time ore detection
+
+```bash
+cd other_vision/
+python gold_silver_detector.py
+
+```
+
+* Enter `a` to detect gold, `b` to detect silver.
+* Supports real-time camera detection of markers.
+
+### 3. Custom Video/Frame Processing
+
+* Modify the `stone.mp4` path as needed.
+* Outputs `first_frame_detected.png` (saved upon the first detection of four corners).
+* Processed videos are saved in the `results/` folder.
+
+---
+
+## 🖼️ Visualization
+
+1. Detect rectangles and polygon corners, labeled in clockwise order.
+2. Draw 3D coordinate axes and reprojection points.
+3. Highlight ROI for arrows and square markers.
+4. Real-time ore detection status output (Gold/Silver).
+
+---
+
+## 📈 Project Advantages
+
+* **Engineering-Ready:** Directly applicable to industrial vision inspection or robotic calibration.
+* **Extensible:** Supports diverse target shapes, color backgrounds, and various video sources.
+* **Professional Workflow:** Demonstrates a full **traditional vision + pose estimation + temporal smoothing** pipeline.
+
+---
+
+# 4_pose_estimation_pnp
+
+## 🔹 项目概述
+
+本模块实现了基于传统计算机视觉的 **结构化目标检测与三维位姿估计流水线**，支持多种目标检测策略和连续帧平滑处理。主要应用于带有标记的矿石、方形或多边形目标的检测与三维姿态计算。
+
+模块特点：
+
+* 多策略目标检测：最小矩形 + 面积过滤、多边形组合识别、实时矿石识别。
+* 位姿估算：使用 OpenCV `solvePnP` 进行三维姿态求解，支持连续帧平滑与异常跳动过滤。
+* 可视化输出：支持 2D 标记、3D 坐标轴绘制、重投影点显示。
+* 灵活性：适配视频或摄像头输入，支持结果保存与帧截图。
+
+---
+
+## 📁 目录结构
+
+```
+4_pose_estimation_pnp/
+├── detect_squares_area_filter/          
+│   ├── imagepoints.py        # 辅助函数：图像角点提取
+│   ├── pnp.py                # 位姿解算核心流程（solvePnP）
+│   ├── pnp_math.py           # 数学计算验证误差：重投影、旋转矩阵、平滑滤波
+│   └── pnp_Matplotlib3D.py   # 相机轨迹可视化（Matplotlib）
+└── other_vision/
+    ├── detect_quad_from_hex_combo/      
+    │   ├── test.py            # 多边形组合检测（1 square + 3 hex），带位姿解算
+    │   └── test0.py           # 主程序，演示视频处理 + 位姿可视化
+    └── gold_silver_detector.py # 实时矿石检测（仅检测，无 solvePnP）
+assets/                          # 示例视频/图片/资源
+README.md
+stone.mp4                        # 测试视频
+```
+
+![金矿石](assets/2d.png) 
 > 注意此文件中的HSV分割范围由T1中的exact tool函数提取
-> ![分割结果](HSV.png)
-
+![分割结果](assets/HSV.png)
 ---
 
-## 主要功能
+## ⚙️ 功能概览
 
-* 黄色背景区域检测与黑色形状提取
-* 方块跳动过滤与面积稳定性判断
-* 四角自动排序与对应 3D 坐标映射
-* `solvePnP` 求解位姿并绘制 3D 坐标轴
-* 视频帧保存、结果视频输出与演示 GIF（可选）
+### 1️⃣ `detect_squares_area_filter/`
 
----
+* 使用最小外接矩形 + 面积相似度过滤检测黑色方形目标。
+* * 框选目标，可用于检测角点是否可以准确输出 
+* ![框选效果](assets/yellow_squares_20251015_193540.png)
+* 提取角点用于三维位姿计算。
+* 支持连续帧位姿平滑，抑制异常跳动。 
+* GIF 演示 
+* 坐标绘制效果 ![坐标绘制效果](assets/output_result_20251016_130043.gif)
+* ## ⚖️ Parameter Adjustment Guide
 
-## 文件结构
-
-```
-project_root/
-├── camera.py                        # 摄像头拍照脚本（按空格拍照，ESC退出）
-├── imagepoints.py                   # 目标框选与过滤函数模块、排序获得指定2d坐标角点
-├── pnp.py                           # 🎯 主程序：位姿检测与可视化（核心文件）
-├── stone.mp4                        # 测试视频（可替换）
-├── demo.gif                         # （可选）演示 GIF，用于 README 预览
-└── README.md                        # 本文件
-```
-
----
-
-## ⚙️ 依赖与安装
-
-建议 Python 3.8+。
-
-```bash
-pip install opencv-python numpy imageio
-```
----
-
-## 文件说明
-
----
-
-
-### 1. `camera_capture.py`
-
-* 功能：打开默认摄像头，按 **空格** 保存当前帧（带时间戳），按 **ESC** 退出。
-
----
-
-### 2. `imagepoints.py`
-
-* 功能：实现 `detect_black_shapes_on_yellow()`、`sort_squares_corners()`、`filter_jumping_squares()`。
-* 主要特性：
-  - 使用 HSV 空间分割黄色与黑色区域
-  - 支持帧间跳动过滤与面积差异检测
-  - 可处理图片路径或视频帧输入
-  - 输出矩形框与排序后的方块坐标
-
-* 已修正与说明：
-
-  * `detect_black_shapes_on_yellow()` 支持输入为图片路径或 ndarray，并返回 `(result_img, squares)`。
-  * 面积差异判断：当 `len(squares) == 4` 时，若 `(max_area - min_area) / max_area > area_diff_ratio` 则认为差异过大并丢弃（README 中推荐把阈值命名为 `area_diff_ratio` 并用相对最大面积判断）。
-  * 跳动过滤：提供两种可选逻辑（按索引逐一比较或按最近距离匹配），默认代码示例使用按索引比较（当保证排序稳定时）。
-
-* 框选目标，可用于检测角点是否可以准确输出
-  * ![框选效果](yellow_squares_20251015_193540.png)
-
----
-
-### 3. `pnp.py`（主程序 — **重点**）
-
-功能概览：
-
-* 从视频或摄像头读取帧
-* 调用 `detect_black_shapes_on_yellow()` 检测四个角点
-* 构造 `imagePoints`（**注意：使用矩形的合适角点位置**）并与 `objectPoints` 对应
-* 使用 `cv2.solvePnP()` 求解 rvec/tvec
-* 使用 `cv2.drawFrameAxes()` 绘制 3D 坐标轴到图像
-* 将可视化帧写入输出视频 `output_result.mp4`
-
-关键参数（请根据你的相机标定结果调整）：
-
-```python
-cameraMatrix = np.array([[fx, 0, cx],
-                         [0, fy, cy],
-                         [0, 0, 1]], dtype=np.float32)
-distCoeffs = np.array([k1, k2, p1, p2, k3], dtype=np.float32)
-
-objectPoints = np.array([
-    [-w/2, -h/2, 0],  # 左上（世界坐标示例）
-    [-w/2,  h/2, 0],  # 左下
-    [ w/2, -h/2, 0],  # 右上
-    [ w/2,  h/2, 0],  # 右下
-], dtype=np.float32)
-
-axis_length = 50
-jump_threshold = 40
-```
-
-运行示例：
-
-```bash
-python pose_estimation.py
-```
-
-按键说明：
-
-* `Space`：暂停 / 继续
-* `S`：保存当前帧为图片（文件名 `saved_frame_<tick>.png`）
-* `ESC`：退出
-
-输出文件：
-
-* `first_frame_detected.png`（首次检测到四个角点时保存）
-* `output_result.mp4`（带坐标轴的输出视频）
-
----
-
-## GIF 演示
-### 坐标绘制效果
-![坐标绘制效果](output_result_20251016_130043.gif)
-
-### 视频帧框选效果
-* 同时程序自动保存一帧框选图，判断角点是否符合
-![视频帧框选效果图](first_frame_detected.png)
-
----
-## ⚖️ 参数调节说明
-
-| 参数 | 含义 | 推荐值 | 说明 |
+| Parameter | Meaning | Recommended Value | Notes |
 |:--|:--|:--|:--|
-| `jump_threshold` | 单帧跳动距离阈值 | 40~60 | 单位为像素，值越小越严格 |
-| `area_diff_ratio` | 面积差异比例阈值 | 0.3 | 方块面积波动超过该比例则丢弃 |
-| `axis_length` | 坐标轴长度 | 50 | 控制绘制轴的长度 |
+| `jump_threshold` | Single-frame jump distance threshold | 40~60 | Unit: pixels; smaller values → stricter suppression |
+| `area_diff_ratio` | Area difference ratio threshold | 0.3 | Discard squares if area fluctuation exceeds this ratio |
+| `axis_length` | 3D axis length | 50 | Controls the length of drawn axes |
 
 
+### 2️⃣ `other_vision/detect_quad_from_hex_combo/`
+
+* 在黄色背景中检测 1 个方形 + 3 个六边形的组合，计算四点矩形。
+* 根据几何评分（矩形近似度）选择最佳组合。
+* 可视化质心、角点编号及连线。
+* 支持 solvePnP 位姿解算及重投影异常处理。
+* ![框选效果](assets/img.png)
+
+### 3️⃣ `other_vision/gold_silver_detector.py`
+
+* 实时检测金矿石/银矿石标记（箭头 + 方块）。
+* 基于颜色分割、轮廓提取、形状判别完成标记识别。
+* ROI 高亮显示箭头与方块标记。
+* 不含位姿计算，适合实时监控或快速识别。
+
+---
+
+## 📌 技术亮点
+
+* **多策略几何检测**：结合最小矩形、面积过滤、多边形组合评分，实现稳定检测。
+* **三维位姿求解**：使用 OpenCV `solvePnP`（IPPE + ITERATIVE）方法估计 6DOF 姿态。
+* **连续帧平滑**：平滑旋转向量和位移向量，减少抖动。
+* **重投影校验**：通过重投影误差过滤异常解，保证位姿可靠性。
+* **模块化设计**：不同策略可独立调用，适合快速实验和迭代开发。
+
+---
+
+## 💻 依赖环境
+
+* Python ≥ 3.6
+* OpenCV (`cv2`)
+* NumPy (`np`)
+* Matplotlib（仅用于 3D 可视化 `pnp_Matplotlib3D.py`）
+
+安装依赖示例：
+
+```bash
+pip install opencv-python numpy matplotlib
+```
+
+---
+
+## 🚀 使用示例
+
+### 1. 多边形组合位姿检测（视频）
+
+```bash
+cd other_vision/detect_quad_from_hex_combo/
+python test0.py
+```
+
+* 空格键暂停/继续播放
+* `S` 保存当前帧
+* `ESC` 退出
+
+### 2. 实时矿石检测
+
+```bash
+cd other_vision/
+python gold_silver_detector.py
+```
+
+* 输入 `a` 检测金矿石，输入 `b` 检测银矿石
+* 可通过摄像头实时检测标记
+
+### 3. 自定义视频或帧处理
+
+* 修改 `stone.mp4` 路径即可
+* 输出first_frame_detected.png（首次检测到四个角点时保存）
+* 输出视频会保存在 `results/` 文件夹
+
+---
+
+## 🖼️ 可视化效果
+
+1. 检测矩形和多边形角点，并按顺时针编号
+2. 绘制 3D 坐标轴与重投影点
+3. ROI 高亮显示箭头与方块标记
+4. 支持实时矿石识别状态输出（Gold/Silver）
+
+---
+
+## 📈 项目优势
+
+* **工程化可用**：可用于工业视觉检测或机器人标定。
+* **可扩展**：支持不同目标形状、颜色背景、视频来源。

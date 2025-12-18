@@ -1,12 +1,135 @@
-# 蓝色灯条检测与多边形拟合框选（视频实时处理）
 
-## 项目简介
+# Real-time Blue Light Bar Detection & Polygon Fitting
 
-本项目通过计算机视觉技术，实现对视频中蓝色灯条（如箭头指示灯）的实时检测与框选。  
-结合 **颜色分割 (Color Segmentation)**、**最小框选 (Bounding Box)** 与 **多边形拟合 (Polygon Approximation)** 方法，能够在不同光照和角度下稳定检测目标区域，并实时可视化结果。
+**Real-time Detection of Blue Arrow Light Bars Based on Geometric Processing**
+
+## Project Overview
+
+This module integrates outputs from the **HSV Calibration** and **Structured Single-frame Detection** modules to perform frame-by-frame boundary detection. Equipped with real-time visualization and optional video export, it enables high-precision tracking of blue arrow light bars within video streams.
+
+**Pipeline Position:** HSV Calibration → Structured Color Detection → **Video/Temporal Processing (This Module)** → PnP Pose Estimation.
+
+**Target Applications:** Real-time industrial monitoring, traffic signal detection, and embedded vision systems.
 
 ---
 
+## 🎥 Detection Demonstration
+
+> The following demonstration illustrates the real-time detection and bounding of blue arrow light bars within a video sequence.
+
+![demo](T3_20251013_160349.gif)
+
+![image](arrow_detect_v3_20251013_172823.png)
+---
+
+## Methodology (Per-frame Processing)
+
+### 1. Color Segmentation
+
+Blue regions are isolated using the **HSV (Hue, Saturation, Value)** color space:
+
+```python
+cv2.inRange(hsv, lower_blue, upper_blue)
+
+```
+
+This method is robust against illumination changes. Thresholds can be tuned to adapt to various ambient lighting conditions.
+
+### 2. Morphological Filtering
+
+**Closing operations** are applied to eliminate small noise artifacts and smooth contour edges:
+
+```python
+cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel, iterations=2)
+
+```
+
+### 3. Polygon Approximation
+
+Even with complete contours, `cv2.approxPolyDP()` is utilized to simplify the geometry:
+
+* **Noise Reduction:** Removes contour jitter and jagged edges.
+* **Feature Extraction:** Identifies critical vertices for shape analysis.
+* **Accuracy:** Enhances the precision of shape recognition and bounding box generation.
+
+### 4. Minimum-Area Bounding
+
+The system utilizes `cv2.minAreaRect` to generate **Rotated Bounding Boxes**, ensuring an accurate fit for targets that are tilted or rotated relative to the camera plane.
+
+---
+
+## Key Features
+
+1. **Real-Time Performance**
+* Extracts blue light bars via HSV segmentation.
+* Retrieves contours with `cv2.findContours` and fits them with `cv2.minAreaRect`.
+* **Visualization:** Contours are rendered in **Green**, while Rotated Rectangles are highlighted in **Red**.
+
+
+2. **Advantages of Polygon Fitting**
+* **Simplification:** Reduces vertex count while maintaining structural integrity.
+* **Stability:** Improves the calculation of orientation and angles by eliminating high-frequency noise.
+* **Efficiency:** Streamlines subsequent geometric analysis.
+
+
+3. **User Interaction**
+* **Spacebar:** Toggle Pause/Resume.
+* **S Key:** Save current frame (automatically timestamped).
+* **ESC Key:** Exit program.
+
+
+4. **Automated Video Output**
+* Processed frames are encoded into a video file in real-time.
+* Filenames include timestamps to prevent data overwriting and allow for batch analysis.
+
+
+
+---
+
+## Workflow
+
+1. **Preparation:** Place the video file in the script directory or connect a camera (Input index `"0"`).
+2. **Execution:**
+* Run the main script: `python main.py`
+* Specify the source: `process_video("video.mp4")`
+
+
+3. **Output:**
+* **Timestamped Frames:** Static images captured during runtime.
+* **Processed Video:** Final MP4 file containing the detection overlays.
+
+
+
+---
+
+## Optimization Summary
+
+* **Adaptive Segmentation:** HSV thresholds can be adjusted via a GUI tool to handle fluctuating lighting.
+* **Denoising:** Combined **Area Filtering** and **Morphological Closing** effectively filters out non-target artifacts.
+* **Geometric Precision:** The use of **Minimum Area Rectangles** provides a tighter, more professional fit than standard Axis-Aligned Bounding Boxes (AABB).
+* **Structural Integrity:** `approxPolyDP` ensures that the detected shape remains consistent across consecutive frames.
+
+---
+
+## Project Significance
+
+This project demonstrates a comprehensive computer vision pipeline—from raw image acquisition and color-space transformation to geometric refinement and data logging. It serves as a robust foundation for **Intelligent Transportation Systems (ITS)**, **Industrial Quality Inspection**, and **Robotic Navigation**.
+
+
+
+---
+
+# 蓝色灯条检测与多边形拟合框选（视频实时处理）
+基于几何处理的蓝色箭头灯条实时检测
+## 项目简介
+
+本模块基于HSV校准模块和单帧结构化检测模块的输出，实现基于多边形的边界的逐帧检测，并配备实时可视化和可选视频输出，实现了视频流中蓝色箭头灯条的实时检测与框选。
+
+管道位置：HSV校准→结构化色彩检测→视频/时间处理（本模块）→pnp姿态估计
+
+模块适用于 实时应用场景，如工业监控、交通信号检测及嵌入式视觉系统。
+
+---
 ## 🎥 检测演示示例
 
 > 下图为程序实时检测视频中蓝色箭头灯条的效果演示👇  
@@ -17,7 +140,7 @@
 
 ---
 
-## 方法原理
+## 方法原理(对于每一帧)
 
 ### 1️. 颜色分割（Color Segmentation）
 使用 HSV 色彩空间筛选蓝色区域：
@@ -40,6 +163,9 @@ cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel, iterations=2)
 提取关键角点；
 
 提高形状识别与包围框精度。
+
+### 3️. 最小面积边界 （Minimum-Area Bounding）
+使用 cv2.minAreaRect 生成旋转矩形准确匹配倾斜或旋转的靶标
 
 ---
 
@@ -118,5 +244,5 @@ cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel, iterations=2)
 
 ## 项目意义
 本项目展示了图像处理与目标检测的综合应用流程，
-从 静态图像分析 → 实时视频检测 → 结果可视化与存储，
-可用于交通信号识别、工业检测与智能监控等领域的研究与实践
+展示了 从静态图像分析到实时视频检测再到可视化与存储的完整流程，
+可应用于 交通信号识别、工业检测与智能监控 等领域研究与实践。
